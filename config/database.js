@@ -1,17 +1,33 @@
-const mysql = require('mysql2');
+const sqlite3 = require('sqlite3');
+const { open } = require('sqlite');
+const path = require('path');
 require('dotenv').config();
 
-const pool = mysql.createPool({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
-});
+async function getDbConnection() {
+    try {
+        const db = await open({
+            filename: path.join(process.cwd(), 'database.sqlite'),
+            driver: sqlite3.Database
+        });
+        
+        // Enable foreign keys
+        await db.run('PRAGMA foreign_keys = ON');
+        
+        return db;
+    } catch (error) {
+        console.error('Database connection error:', error);
+        throw error;
+    }
+}
 
-// Convert pool to use promises
-const promisePool = pool.promise();
+// Export a singleton instance
+let dbInstance = null;
 
-module.exports = promisePool; 
+async function getDb() {
+    if (!dbInstance) {
+        dbInstance = await getDbConnection();
+    }
+    return dbInstance;
+}
+
+module.exports = getDb; 

@@ -8,10 +8,19 @@ const rateLimit = require('express-rate-limit');
 const session = require('express-session');
 const cookieParser = require('cookie-parser');
 const logger = require('./config/logger');
+const initializeDatabase = require('./config/init-db');
 const authRoutes = require('./routes/auth');
 const studentRoutes = require('./routes/students');
 
 const app = express();
+
+// Initialize database
+initializeDatabase()
+    .then(() => logger.info('Database initialized'))
+    .catch(err => {
+        logger.error('Failed to initialize database:', err);
+        process.exit(1);
+    });
 
 // Security middleware
 app.use(helmet());
@@ -20,7 +29,7 @@ app.use(cookieParser());
 
 // Session configuration
 app.use(session({
-    secret: process.env.SESSION_SECRET,
+    secret: process.env.SESSION_SECRET || 'your-fallback-secret',
     resave: false,
     saveUninitialized: false,
     cookie: {
