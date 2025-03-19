@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fees Management - Master Academy</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="fees.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="logo-container">
+                <img src="images/image.png" alt="Master Academy Logo" class="logo">
+                <h2>Master Academy</h2>
+            </div>
+            
+            <nav class="dashboard-nav">
+                <a href="teacher-dashboard.html" class="nav-item">
+                    <span class="icon">📊</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="students.html" class="nav-item">
+                    <span class="icon">👨‍👩‍👧‍👦</span>
+                    <span>Students</span>
+                </a>
+                <a href="fees.html" class="nav-item active">
+                    <span class="icon">💰</span>
+                    <span>Fees</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="icon">📝</span>
+                    <span>Attendance</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="icon">📚</span>
+                    <span>Assignments</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="icon">📊</span>
+                    <span>Grades</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="icon">📅</span>
+                    <span>Schedule</span>
+                </a>
+            </nav>
+            
+            <div class="user-profile">
+                <div class="user-info">
+                    <span class="user-name">Welcome, <span id="teacherName">Teacher</span></span>
+                </div>
+                <button id="logoutBtn" class="logout-btn">Logout</button>
+            </div>
+        </aside>
+        
+        <main class="dashboard-content">
+            <header class="dashboard-header">
+                <h1>Fees Management</h1>
+                <div class="date-time">
+                    <span id="currentDate"></span>
+                </div>
+            </header>
+            
+            <!-- Add this table structure to your fees.html file -->
+            <div class="fees-container">
+              <div class="summary-cards">
+                <div class="summary-card">
+                  <h3>Total Fees Collected</h3>
+                  <p id="totalCollected">$0.00</p>
+                </div>
+                <div class="summary-card">
+                  <h3>Pending Payments</h3>
+                  <p id="pendingAmount">$0.00</p>
+                </div>
+                <div class="summary-card">
+                  <h3>Overdue Payments</h3>
+                  <p id="overdueAmount">$0.00</p>
+                </div>
+                <div class="summary-card">
+                  <h3>Students Paid</h3>
+                  <p id="studentsPaid">0/0</p>
+                </div>
+              </div>
+            
+              <div class="fees-table-container">
+                <table class="fees-table">
+                  <thead>
+                    <tr>
+                      <th>Student ID</th>
+                      <th>Name</th>
+                      <th>Grade</th>
+                      <th>Fee Type</th>
+                      <th>Amount</th>
+                      <th>Due Date</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <!-- Fees data will be loaded here -->
+                    <tr>
+                      <td colspan="8" class="no-data">No fee records found</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            
+              <div class="pagination">
+                <!-- Pagination buttons will be added here -->
+              </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Record Payment Modal -->
+    <div id="paymentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Record Payment</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="paymentForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="studentSelect">Student*</label>
+                            <select id="studentSelect" name="studentId" required>
+                                <option value="">Select Student</option>
+                                <!-- Students will be loaded here -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="feeType">Fee Type*</label>
+                            <select id="feeType" name="feeType" required>
+                                <option value="">Select Fee Type</option>
+                                <option value="Tuition">Tuition Fee</option>
+                                <option value="Library">Library Fee</option>
+                                <option value="Lab">Lab Fee</option>
+                                <option value="Sports">Sports Fee</option>
+                                <option value="Transport">Transport Fee</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="amount">Amount ($)*</label>
+                            <input type="number" id="amount" name="amount" min="0" step="0.01" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="dueDate">Due Date*</label>
+                            <input type="date" id="dueDate" name="dueDate" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="paymentDate">Payment Date</label>
+                            <input type="date" id="paymentDate" name="paymentDate">
+                        </div>
+                        <div class="form-group">
+                            <label for="paymentMethod">Payment Method</label>
+                            <select id="paymentMethod" name="paymentMethod">
+                                <option value="">Select Payment Method</option>
+                                <option value="Cash">Cash</option>
+                                <option value="Credit Card">Credit Card</option>
+                                <option value="Debit Card">Debit Card</option>
+                                <option value="Bank Transfer">Bank Transfer</option>
+                                <option value="Check">Check</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="notes">Notes</label>
+                        <textarea id="notes" name="notes" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="cancel-btn">Cancel</button>
+                        <button type="submit" class="submit-btn">Record Payment</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script src="fees.js"></script>
+</body>
+</html>

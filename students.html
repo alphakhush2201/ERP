@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Students - Master Academy</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="students.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="logo-container">
+                <img src="images/image.png" alt="Master Academy Logo" class="logo">
+                <h2>Master Academy</h2>
+            </div>
+            
+            <nav class="dashboard-nav">
+                <a href="teacher-dashboard.html" class="nav-item">
+                    <span class="icon">📊</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="students.html" class="nav-item active">
+                    <span class="icon">👨‍👩‍👧‍👦</span>
+                    <span>Students</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="icon">📝</span>
+                    <span>Attendance</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="icon">📚</span>
+                    <span>Assignments</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="icon">📊</span>
+                    <span>Grades</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="icon">📅</span>
+                    <span>Schedule</span>
+                </a>
+            </nav>
+            
+            <div class="user-profile">
+                <div class="user-info">
+                    <span class="user-name">Welcome, <span id="teacherName">Teacher</span></span>
+                </div>
+                <button id="logoutBtn" class="logout-btn">Logout</button>
+            </div>
+        </aside>
+        
+        <main class="dashboard-content">
+            <header class="dashboard-header">
+                <h1>Students</h1>
+                <div class="date-time">
+                    <span id="currentDate"></span>
+                </div>
+            </header>
+            
+            <div class="students-container">
+                <div class="students-header">
+                    <div class="search-container">
+                        <input type="text" id="searchInput" class="search-input" placeholder="Search students...">
+                        <select id="gradeFilter" class="search-input">
+                            <option value="">All Grades</option>
+                            <option value="Grade 7">Grade 7</option>
+                            <option value="Grade 8">Grade 8</option>
+                            <option value="Grade 9">Grade 9</option>
+                            <option value="Grade 10">Grade 10</option>
+                            <option value="Grade 11">Grade 11</option>
+                        </select>
+                    </div>
+                    <button class="add-student-btn">Add New Student</button>
+                </div>
+                
+                <table class="students-table">
+                    <thead>
+                        <tr>
+                            <th>Student ID</th>
+                            <th>Name</th>
+                            <th>Grade</th>
+                            <th>Section</th>
+                            <th>Parent Name</th>
+                            <th>Contact</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentsTableBody">
+                        <!-- Student data will be populated here -->
+                    </tbody>
+                </table>
+                
+                <div class="pagination" id="pagination">
+                    <!-- Pagination buttons will be added here -->
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Add this modal HTML right before the closing </body> tag -->
+    <div id="addStudentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add New Student</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="addStudentForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="firstName">First Name*</label>
+                            <input type="text" id="firstName" name="firstName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="lastName">Last Name*</label>
+                            <input type="text" id="lastName" name="lastName" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="dateOfBirth">Date of Birth*</label>
+                            <input type="date" id="dateOfBirth" name="dateOfBirth" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="gender">Gender*</label>
+                            <select id="gender" name="gender" required>
+                                <option value="">Select Gender</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="grade">Grade*</label>
+                            <select id="grade" name="grade" required>
+                                <option value="">Select Grade</option>
+                                <option value="Grade 7">Grade 7</option>
+                                <option value="Grade 8">Grade 8</option>
+                                <option value="Grade 9">Grade 9</option>
+                                <option value="Grade 10">Grade 10</option>
+                                <option value="Grade 11">Grade 11</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="section">Section*</label>
+                            <select id="section" name="section" required>
+                                <option value="">Select Section</option>
+                                <option value="A">A</option>
+                                <option value="B">B</option>
+                                <option value="C">C</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="previousSchool">Previous School</label>
+                            <input type="text" id="previousSchool" name="previousSchool">
+                        </div>
+                        <div class="form-group">
+                            <label for="admissionDate">Admission Date*</label>
+                            <input type="date" id="admissionDate" name="admissionDate" required>
+                        </div>
+                    </div>
+                    
+                    <h3>Parent/Guardian Information</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="parentName">Parent/Guardian Name*</label>
+                            <input type="text" id="parentName" name="parentName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="parentRelationship">Relationship*</label>
+                            <select id="parentRelationship" name="parentRelationship" required>
+                                <option value="">Select Relationship</option>
+                                <option value="father">Father</option>
+                                <option value="mother">Mother</option>
+                                <option value="guardian">Guardian</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="parentEmail">Email*</label>
+                            <input type="email" id="parentEmail" name="parentEmail" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="parentPhone">Phone Number*</label>
+                            <input type="tel" id="parentPhone" name="parentPhone" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="address">Address*</label>
+                        <textarea id="address" name="address" rows="3" required></textarea>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="cancel-btn">Cancel</button>
+                        <button type="submit" class="submit-btn">Add Student</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- Add these modals right before the closing </body> tag, after the add student modal -->
+    
+    <!-- View Student Modal -->
+    <div id="viewStudentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Student Details</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="student-details">
+                    <div class="detail-section">
+                        <h3>Basic Information</h3>
+                        <div class="detail-row">
+                            <div class="detail-label">Student ID:</div>
+                            <div class="detail-value" id="viewStudentId"></div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Full Name:</div>
+                            <div class="detail-value" id="viewFullName"></div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Grade & Section:</div>
+                            <div class="detail-value" id="viewGradeSection"></div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Date of Birth:</div>
+                            <div class="detail-value" id="viewDob"></div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Gender:</div>
+                            <div class="detail-value" id="viewGender"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-section">
+                        <h3>Academic Information</h3>
+                        <div class="detail-row">
+                            <div class="detail-label">Admission Date:</div>
+                            <div class="detail-value" id="viewAdmissionDate"></div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Previous School:</div>
+                            <div class="detail-value" id="viewPreviousSchool"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-section">
+                        <h3>Parent/Guardian Information</h3>
+                        <div class="detail-row">
+                            <div class="detail-label">Name:</div>
+                            <div class="detail-value" id="viewParentName"></div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Relationship:</div>
+                            <div class="detail-value" id="viewParentRelationship"></div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Email:</div>
+                            <div class="detail-value" id="viewParentEmail"></div>
+                        </div>
+                        <div class="detail-row">
+                            <div class="detail-label">Phone:</div>
+                            <div class="detail-value" id="viewParentPhone"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-section">
+                        <h3>Address</h3>
+                        <div class="detail-row">
+                            <div class="detail-value address" id="viewAddress"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button class="cancel-btn">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Edit Student Modal -->
+    <!-- Add this modal before the closing </body> tag -->
+    <div id="editStudentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Edit Student</h2>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="editStudentForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editFirstName">First Name*</label>
+                            <input type="text" id="editFirstName" name="editFirstName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editLastName">Last Name*</label>
+                            <input type="text" id="editLastName" name="editLastName" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editDateOfBirth">Date of Birth*</label>
+                            <input type="date" id="editDateOfBirth" name="editDateOfBirth" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editGender">Gender*</label>
+                            <select id="editGender" name="editGender" required>
+                                <option value="">Select Gender</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editGrade">Grade*</label>
+                            <select id="editGrade" name="editGrade" required>
+                                <option value="">Select Grade</option>
+                                <option value="Grade 7">Grade 7</option>
+                                <option value="Grade 8">Grade 8</option>
+                                <option value="Grade 9">Grade 9</option>
+                                <option value="Grade 10">Grade 10</option>
+                                <option value="Grade 11">Grade 11</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="editSection">Section*</label>
+                            <select id="editSection" name="editSection" required>
+                                <option value="">Select Section</option>
+                                <option value="A">A</option>
+                                <option value="B">B</option>
+                                <option value="C">C</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editPreviousSchool">Previous School</label>
+                            <input type="text" id="editPreviousSchool" name="editPreviousSchool">
+                        </div>
+                        <div class="form-group">
+                            <label for="editAdmissionDate">Admission Date*</label>
+                            <input type="date" id="editAdmissionDate" name="editAdmissionDate" required>
+                        </div>
+                    </div>
+                    
+                    <h3>Parent/Guardian Information</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editParentName">Parent/Guardian Name*</label>
+                            <input type="text" id="editParentName" name="editParentName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editParentRelationship">Relationship*</label>
+                            <select id="editParentRelationship" name="editParentRelationship" required>
+                                <option value="">Select Relationship</option>
+                                <option value="father">Father</option>
+                                <option value="mother">Mother</option>
+                                <option value="guardian">Guardian</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editParentEmail">Email*</label>
+                            <input type="email" id="editParentEmail" name="editParentEmail" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editParentPhone">Phone Number*</label>
+                            <input type="tel" id="editParentPhone" name="editParentPhone" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editAddress">Address*</label>
+                        <textarea id="editAddress" name="editAddress" rows="3" required></textarea>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="cancel-btn">Cancel</button>
+                        <button type="submit" class="submit-btn">Update Student</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script src="students.js"></script>
+</body>
+</html>

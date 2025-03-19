@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Login - Master Academy</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="login.css">
+</head>
+<body>
+    <a href="index.html" class="back-home">
+        ← Back to Home
+    </a>
+
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <img src="images/image.png" alt="Master Academy Logo">
+                <h2>Teacher Login</h2>
+                <p>Welcome back, please login to your account</p>
+            </div>
+
+            <form class="login-form" id="teacherLoginForm">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="remember">
+                        Remember me
+                    </label>
+                </div>
+
+                <button type="submit" class="login-btn">Login</button>
+
+                <div class="forgot-password">
+                    <a href="#">Forgot Password?</a>
+                    <span class="divider"></span>
+                    <a href="admin-login.html">Admin Portal</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script src="teacher-login.js"></script>
+</body>
+</html>
