@@ -1,18 +1,23 @@
-require('dotenv').config();
-const express = require('express');
-const path = require('path');
-const cors = require('cors');
-const helmet = require('helmet');
-const morgan = require('morgan');
-const rateLimit = require('express-rate-limit');
-const session = require('express-session');
-const cookieParser = require('cookie-parser');
-const logger = require('./config/logger');
-const initializeDatabase = require('./config/init-db');
-const authRoutes = require('./routes/auth');
-const admissionsRouter = require('./routes/admissions');
+import 'dotenv/config';
+import express from 'express';
+import path from 'path';
+import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import rateLimit from 'express-rate-limit';
+import session from 'express-session';
+import cookieParser from 'cookie-parser';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import logger from './config/logger.js';
+import initializeDatabase from './config/init-db.js';
+import authRoutes from './routes/auth.js';
+import admissionsRouter from './routes/admissions.js';
 // Comment out or remove until student routes are implemented
 // const studentRoutes = require('./routes/students');
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
 

@@ -1,5 +1,5 @@
-const getDb = require('./database');
-const logger = require('./logger');
+import getDb from './database.js';
+import logger from './logger.js';
 
 async function initializeDatabase() {
     try {
@@ -41,4 +41,4 @@ async function initializeDatabase() {
     }
 }
 
-module.exports = initializeDatabase; 
+export default initializeDatabase; 
