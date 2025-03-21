@@ -113,6 +113,21 @@ router.post('/send-admission', validateAdmissionForm, async (req, res) => {
 // Test endpoint for email
 router.post('/test-email', async (req, res) => {
     try {
+        // Log the configuration
+        logger.info('Attempting to send test email with config:', {
+            from: 'Master Academy <onboarding@resend.dev>',
+            to: process.env.ADMIN_EMAIL,
+            hasApiKey: !!process.env.RESEND_API_KEY
+        });
+
+        if (!process.env.RESEND_API_KEY) {
+            throw new Error('RESEND_API_KEY is not configured');
+        }
+
+        if (!process.env.ADMIN_EMAIL) {
+            throw new Error('ADMIN_EMAIL is not configured');
+        }
+
         const result = await resend.emails.send({
             from: 'Master Academy <onboarding@resend.dev>',
             to: process.env.ADMIN_EMAIL,
@@ -120,11 +135,26 @@ router.post('/test-email', async (req, res) => {
             html: '<h1>Test Email</h1><p>This is a test email to verify the Resend configuration.</p>'
         });
 
-        logger.info('Test email sent successfully:', result);
-        res.json({ message: 'Test email sent successfully', result });
+        logger.info('Test email sent successfully. Response:', result);
+        res.json({ 
+            message: 'Test email sent successfully', 
+            result,
+            sentTo: process.env.ADMIN_EMAIL,
+            apiKeyConfigured: !!process.env.RESEND_API_KEY
+        });
     } catch (error) {
-        logger.error('Error sending test email:', error);
-        res.status(500).json({ error: 'Failed to send test email', details: error.message });
+        logger.error('Error sending test email:', {
+            error: error.message,
+            stack: error.stack,
+            apiKeyConfigured: !!process.env.RESEND_API_KEY,
+            adminEmailConfigured: !!process.env.ADMIN_EMAIL
+        });
+        res.status(500).json({ 
+            error: 'Failed to send test email', 
+            details: error.message,
+            apiKeyConfigured: !!process.env.RESEND_API_KEY,
+            adminEmailConfigured: !!process.env.ADMIN_EMAIL
+        });
     }
 });
 
