@@ -10,6 +10,7 @@ const cookieParser = require('cookie-parser');
 const logger = require('./config/logger');
 const initializeDatabase = require('./config/init-db');
 const authRoutes = require('./routes/auth');
+const admissionsRouter = require('./routes/admissions');
 // Comment out or remove until student routes are implemented
 // const studentRoutes = require('./routes/students');
 
@@ -73,6 +74,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // API Routes
 app.use('/api/auth', authRoutes);
+app.use('/api', admissionsRouter);
 // Comment out until student routes are implemented
 // app.use('/api/students', studentRoutes);
 
