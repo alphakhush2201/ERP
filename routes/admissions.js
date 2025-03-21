@@ -50,7 +50,7 @@ router.post('/send-admission', validateAdmissionForm, async (req, res) => {
         try {
             // Send email to admin
             await resend.emails.send({
-                from: 'Master Academy <admissions@masteracademy.com>',
+                from: 'Master Academy <onboarding@resend.dev>',
                 to: process.env.ADMIN_EMAIL,
                 subject: 'New Admission Inquiry',
                 html: `
@@ -79,7 +79,7 @@ router.post('/send-admission', validateAdmissionForm, async (req, res) => {
 
             // Send confirmation email to parent
             await resend.emails.send({
-                from: 'Master Academy <admissions@masteracademy.com>',
+                from: 'Master Academy <onboarding@resend.dev>',
                 to: email,
                 subject: 'Admission Inquiry Confirmation - Master Academy',
                 html: `
@@ -114,7 +114,7 @@ router.post('/send-admission', validateAdmissionForm, async (req, res) => {
 router.post('/test-email', async (req, res) => {
     try {
         const result = await resend.emails.send({
-            from: 'Master Academy <admissions@masteracademy.com>',
+            from: 'Master Academy <onboarding@resend.dev>',
             to: process.env.ADMIN_EMAIL,
             subject: 'Test Email from Master Academy',
             html: '<h1>Test Email</h1><p>This is a test email to verify the Resend configuration.</p>'
