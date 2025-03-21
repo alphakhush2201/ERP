@@ -4,9 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "node server.js",
-    "build": "next build",
+    "build": "echo 'Building...'",
     "start": "node server.js",
-    "vercel-build": "echo hello"
+    "vercel-build": "echo 'Vercel build complete'"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",

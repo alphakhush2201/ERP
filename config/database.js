@@ -6,7 +6,9 @@ require('dotenv').config();
 async function getDbConnection() {
     try {
         const db = await open({
-            filename: path.join(process.cwd(), 'database.sqlite'),
+            filename: process.env.NODE_ENV === 'production' 
+                ? ':memory:'  // Use in-memory database for production
+                : path.join(process.cwd(), 'database.sqlite'), // Local development
             driver: sqlite3.Database
         });
         

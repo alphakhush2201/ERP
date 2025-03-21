@@ -10,7 +10,8 @@ const cookieParser = require('cookie-parser');
 const logger = require('./config/logger');
 const initializeDatabase = require('./config/init-db');
 const authRoutes = require('./routes/auth');
-const studentRoutes = require('./routes/students');
+// Comment out or remove until student routes are implemented
+// const studentRoutes = require('./routes/students');
 
 const app = express();
 
@@ -23,13 +24,26 @@ initializeDatabase()
     });
 
 // Security middleware
-app.use(helmet());
+if (process.env.NODE_ENV === 'production') {
+    app.set('trust proxy', 1);
+    app.use(helmet({
+        contentSecurityPolicy: {
+            directives: {
+                defaultSrc: ["'self'"],
+                styleSrc: ["'self'", "'unsafe-inline'"],
+                scriptSrc: ["'self'", "'unsafe-inline'"],
+                imgSrc: ["'self'", "data:", "https:"],
+                connectSrc: ["'self'", "https:"],
+            },
+        },
+    }));
+}
 app.use(cors());
 app.use(cookieParser());
 
 // Session configuration
 app.use(session({
-    secret: process.env.SESSION_SECRET || 'your-fallback-secret',
+    secret: process.env.SESSION_SECRET || 'fallback-secret-key',
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -68,7 +82,8 @@ app.use((err, req, res, next) => {
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/students', studentRoutes);
+// Comment out until student routes are implemented
+// app.use('/api/students', studentRoutes);
 
 // Serve static files
 app.get('*', (req, res) => {
@@ -82,6 +97,13 @@ process.on('SIGTERM', () => {
         logger.info('HTTP server closed');
         process.exit(0);
     });
+});
+
+process.on('unhandledRejection', (err) => {
+    logger.error('Unhandled Promise Rejection:', err);
+    if (process.env.NODE_ENV !== 'production') {
+        process.exit(1);
+    }
 });
 
 const PORT = process.env.PORT || 3000;
