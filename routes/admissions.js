@@ -110,4 +110,22 @@ router.post('/send-admission', validateAdmissionForm, async (req, res) => {
     }
 });
 
+// Test endpoint for email
+router.post('/test-email', async (req, res) => {
+    try {
+        const result = await resend.emails.send({
+            from: 'Master Academy <admissions@masteracademy.com>',
+            to: process.env.ADMIN_EMAIL,
+            subject: 'Test Email from Master Academy',
+            html: '<h1>Test Email</h1><p>This is a test email to verify the Resend configuration.</p>'
+        });
+
+        logger.info('Test email sent successfully:', result);
+        res.json({ message: 'Test email sent successfully', result });
+    } catch (error) {
+        logger.error('Error sending test email:', error);
+        res.status(500).json({ error: 'Failed to send test email', details: error.message });
+    }
+});
+
 module.exports = router; 
