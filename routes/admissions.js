@@ -8,6 +8,13 @@ const router = express.Router();
 // Initialize Resend with API key
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+// Email configuration
+const EMAIL_CONFIG = {
+    from: process.env.EMAIL_FROM || 'onboarding@resend.dev',
+    adminEmail: process.env.ADMIN_EMAIL || 'contactus.masteracademy@gmail.com',
+    schoolName: process.env.SCHOOL_NAME || 'Master Academy'
+};
+
 // Validation middleware
 const validateAdmissionForm = [
     body('firstName').trim().notEmpty().withMessage('First name is required'),
@@ -36,8 +43,8 @@ router.post('/test-email', async (req, res) => {
         }
 
         const { data, error } = await resend.emails.send({
-            from: 'Master Academy <onboarding@resend.dev>',
-            to: ['khush1234nayak@gmail.com'],
+            from: 'onboarding@resend.dev',
+            to: ['contactus.masteracademy@gmail.com'],
             subject: 'Test Email - ' + new Date().toLocaleTimeString(),
             html: `
                 <h1>Test Email</h1>
@@ -95,9 +102,9 @@ router.post('/send-admission', validateAdmissionForm, async (req, res) => {
         try {
             // Send email to admin
             const { data: adminEmailData, error: adminEmailError } = await resend.emails.send({
-                from: 'Master Academy <onboarding@resend.dev>',
-                to: ['khush1234nayak@gmail.com'],
-                subject: 'New Admission Inquiry',
+                from: EMAIL_CONFIG.from,
+                to: [EMAIL_CONFIG.adminEmail],
+                subject: `New Admission Inquiry - ${firstName} ${lastName}`,
                 html: `
                     <h2>New Admission Inquiry</h2>
                     <h3>Student Information:</h3>
@@ -128,11 +135,11 @@ router.post('/send-admission', validateAdmissionForm, async (req, res) => {
 
             // Send confirmation email to parent
             const { data: parentEmailData, error: parentEmailError } = await resend.emails.send({
-                from: 'Master Academy <onboarding@resend.dev>',
+                from: EMAIL_CONFIG.from,
                 to: [email],
-                subject: 'Admission Inquiry Confirmation - Master Academy',
+                subject: `Admission Inquiry Confirmation - ${EMAIL_CONFIG.schoolName}`,
                 html: `
-                    <h2>Thank you for your interest in Master Academy</h2>
+                    <h2>Thank you for your interest in ${EMAIL_CONFIG.schoolName}</h2>
                     <p>Dear ${parentName},</p>
                     <p>We have received your admission inquiry for ${firstName} ${lastName}. Our admissions team will review your application and contact you shortly.</p>
                     <p>Here are the details you submitted:</p>
@@ -143,7 +150,7 @@ router.post('/send-admission', validateAdmissionForm, async (req, res) => {
                         <li>Contact Phone: ${phone}</li>
                     </ul>
                     <p>If you have any questions, please don't hesitate to contact us.</p>
-                    <p>Best regards,<br>Master Academy Admissions Team</p>
+                    <p>Best regards,<br>${EMAIL_CONFIG.schoolName} Admissions Team</p>
                 `
             });
 
@@ -154,8 +161,7 @@ router.post('/send-admission', validateAdmissionForm, async (req, res) => {
             logger.info(`Confirmation email sent to ${email}`);
             res.json({ 
                 message: 'Admission inquiry submitted successfully',
-                adminEmailId: adminEmailData.id,
-                parentEmailId: parentEmailData.id
+                success: true
             });
         } catch (emailError) {
             logger.error('Error sending emails:', emailError);
@@ -163,7 +169,10 @@ router.post('/send-admission', validateAdmissionForm, async (req, res) => {
         }
     } catch (error) {
         logger.error('Error processing admission inquiry:', error);
-        res.status(500).json({ error: 'Failed to process admission inquiry. Please try again later.' });
+        res.status(500).json({ 
+            success: false,
+            error: 'Failed to process admission inquiry. Please try again later.' 
+        });
     }
 });
 
