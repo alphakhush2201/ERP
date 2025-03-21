@@ -116,34 +116,36 @@ router.post('/test-email', async (req, res) => {
         // Log environment variables (safely)
         console.log('Environment check:', {
             hasApiKey: !!process.env.RESEND_API_KEY,
-            apiKeyPrefix: process.env.RESEND_API_KEY?.substring(0, 3),
-            adminEmail: process.env.ADMIN_EMAIL
+            apiKeyPrefix: process.env.RESEND_API_KEY?.substring(0, 3)
         });
 
-        // Validate environment variables
+        // Validate API key
         if (!process.env.RESEND_API_KEY) {
             throw new Error('RESEND_API_KEY is not configured');
-        }
-
-        if (!process.env.ADMIN_EMAIL) {
-            throw new Error('ADMIN_EMAIL is not configured');
         }
 
         // Create test email data
         const emailData = {
             from: 'Master Academy <onboarding@resend.dev>',
-            to: process.env.ADMIN_EMAIL,
-            subject: 'Test Email from Master Academy',
+            to: 'khush1234nayak@gmail.com', // Your personal email that's verified with Resend
+            subject: 'Test Email from Master Academy - ' + new Date().toLocaleTimeString(),
             html: `
                 <h1>Test Email</h1>
-                <p>This is a test email sent at: ${new Date().toISOString()}</p>
+                <p>This is a test email sent at: ${new Date().toLocaleString()}</p>
                 <p>If you receive this, the email configuration is working correctly!</p>
-            `
+                <p>Sent to: khush1234nayak@gmail.com</p>
+            `,
+            tags: [
+                {
+                    name: 'test',
+                    value: 'true'
+                }
+            ]
         };
 
         console.log('Attempting to send email with data:', {
             ...emailData,
-            to: emailData.to.substring(0, 10) + '...' // Truncate for privacy
+            to: emailData.to // Showing full email for debugging
         });
 
         // Send the email
@@ -156,7 +158,8 @@ router.post('/test-email', async (req, res) => {
             success: true,
             message: 'Test email sent successfully',
             emailId: result.id,
-            sentTo: process.env.ADMIN_EMAIL
+            sentTo: emailData.to,
+            timestamp: new Date().toISOString()
         });
 
     } catch (error) {
@@ -168,15 +171,16 @@ router.post('/test-email', async (req, res) => {
             details: error.details || 'No additional details'
         });
 
-        // Return error response
+        // Return error response with more details
         res.status(500).json({
             success: false,
             error: 'Failed to send test email',
             message: error.message,
             details: {
                 apiKeyConfigured: !!process.env.RESEND_API_KEY,
-                adminEmailConfigured: !!process.env.ADMIN_EMAIL,
-                errorType: error.name
+                errorType: error.name,
+                timestamp: new Date().toISOString(),
+                errorDetails: error.details || 'No additional details'
             }
         });
     }
