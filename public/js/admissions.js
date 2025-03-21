@@ -5,11 +5,17 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
         console.log('Form submitted');
         
+        // Get form data including the terms checkbox
         const formData = new FormData(form);
         const data = {};
         
         formData.forEach((value, key) => {
-            data[key] = value;
+            // For checkbox, we need to send its checked state
+            if (key === 'terms') {
+                data[key] = formData.get(key) === 'on';
+            } else {
+                data[key] = value;
+            }
         });
         
         console.log('Sending data:', data);
@@ -23,6 +29,9 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(response => {
             console.log('Response status:', response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             return response.json();
         })
         .then(result => {
