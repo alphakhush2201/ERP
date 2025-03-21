@@ -21,31 +21,36 @@ const __dirname = dirname(__filename);
 
 const app = express();
 
-// Initialize database
-initializeDatabase()
-    .then(() => logger.info('Database initialized'))
-    .catch(err => {
-        logger.error('Failed to initialize database:', err);
-        process.exit(1);
-    });
+// Initialize database only in development
+if (process.env.NODE_ENV !== 'production') {
+    initializeDatabase()
+        .then(() => logger.info('Database initialized'))
+        .catch(err => {
+            logger.error('Failed to initialize database:', err);
+            process.exit(1);
+        });
+}
 
 // Security middleware
-if (process.env.NODE_ENV === 'production') {
-    app.set('trust proxy', 1);
-    app.use(helmet({
-        contentSecurityPolicy: {
-            directives: {
-                defaultSrc: ["'self'"],
-                styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-                scriptSrc: ["'self'", "'unsafe-inline'"],
-                imgSrc: ["'self'", "data:", "https:"],
-                connectSrc: ["'self'", "https:"],
-                fontSrc: ["'self'", "https://fonts.gstatic.com"],
-            },
+app.set('trust proxy', 1);
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+            scriptSrc: ["'self'", "'unsafe-inline'"],
+            imgSrc: ["'self'", "data:", "https:"],
+            connectSrc: ["'self'", "https:"],
+            fontSrc: ["'self'", "https://fonts.gstatic.com"],
         },
-    }));
-}
-app.use(cors());
+    },
+}));
+
+app.use(cors({
+    origin: process.env.CORS_ORIGIN || '*',
+    credentials: true
+}));
+
 app.use(cookieParser());
 
 // Session configuration
@@ -54,9 +59,10 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     cookie: {
-        secure: process.env.NODE_ENV === 'production',
+        secure: true,
         httpOnly: true,
-        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        sameSite: 'none'
     }
 }));
 
@@ -65,10 +71,14 @@ const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 100 // limit each IP to 100 requests per windowMs
 });
-app.use('/api', limiter); // Apply rate limiting only to API routes
+app.use('/api', limiter);
 
-// Logging middleware
-app.use(morgan('combined', { stream: { write: message => logger.info(message.trim()) } }));
+// Logging middleware - use console in production for Vercel logs
+if (process.env.NODE_ENV === 'production') {
+    app.use(morgan('combined'));
+} else {
+    app.use(morgan('combined', { stream: { write: message => logger.info(message.trim()) } }));
+}
 
 // Body parsing middleware
 app.use(express.json());
@@ -83,6 +93,11 @@ app.use('/api', admissionsRouter);
 // Comment out until student routes are implemented
 // app.use('/api/students', studentRoutes);
 
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+    res.json({ status: 'healthy', environment: process.env.NODE_ENV });
+});
+
 // Handle HTML routes - serve the appropriate HTML file
 app.get('/*.html', (req, res) => {
     const htmlFile = path.join(__dirname, 'public', req.path);
@@ -96,7 +111,7 @@ app.get('/', (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-    logger.error(err.stack);
+    console.error(err.stack);
     res.status(500).json({
         success: false,
         message: 'Internal Server Error',
@@ -104,23 +119,18 @@ app.use((err, req, res, next) => {
     });
 });
 
-// Graceful shutdown
-process.on('SIGTERM', () => {
-    logger.info('SIGTERM signal received. Closing HTTP server...');
-    server.close(() => {
-        logger.info('HTTP server closed');
-        process.exit(0);
-    });
-});
-
+// Handle unhandled rejections
 process.on('unhandledRejection', (err) => {
-    logger.error('Unhandled Promise Rejection:', err);
-    if (process.env.NODE_ENV !== 'production') {
-        process.exit(1);
-    }
+    console.error('Unhandled Promise Rejection:', err);
 });
 
-const PORT = process.env.PORT || 3000;
-const server = app.listen(PORT, () => {
-    logger.info(`Server running on port ${PORT} in ${process.env.NODE_ENV} mode`);
-});
+// Export the app for Vercel
+export default app;
+
+// Start the server if not in production (Vercel handles this in production)
+if (process.env.NODE_ENV !== 'production') {
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, () => {
+        logger.info(`Server running on port ${PORT} in ${process.env.NODE_ENV} mode`);
+    });
+}
