@@ -4,12 +4,27 @@ const nodemailer = require('nodemailer');
 const { body, validationResult } = require('express-validator');
 const logger = require('../config/logger');
 
-// Create a transporter using nodemailer
+// Create a transporter using nodemailer with OAuth2
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
     auth: {
+        type: 'OAuth2',
         user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASSWORD
+        clientId: process.env.GMAIL_CLIENT_ID,
+        clientSecret: process.env.GMAIL_CLIENT_SECRET,
+        refreshToken: process.env.GMAIL_REFRESH_TOKEN,
+        accessToken: process.env.GMAIL_ACCESS_TOKEN
+    }
+});
+
+// Test email configuration
+transporter.verify(function(error, success) {
+    if (error) {
+        logger.error('Email configuration error:', error);
+    } else {
+        logger.info('Email server is ready to send messages');
     }
 });
 
@@ -55,7 +70,7 @@ router.post('/send-admission', validateAdmissionForm, async (req, res) => {
 
         // Create email content
         const mailOptions = {
-            from: process.env.EMAIL_USER,
+            from: `"Master Academy" <${process.env.EMAIL_USER}>`,
             to: process.env.ADMIN_EMAIL || process.env.EMAIL_USER,
             subject: 'New Admission Inquiry',
             html: `
@@ -80,36 +95,43 @@ router.post('/send-admission', validateAdmissionForm, async (req, res) => {
             `
         };
 
-        // Send confirmation email to parent
-        const parentMailOptions = {
-            from: process.env.EMAIL_USER,
-            to: email,
-            subject: 'Admission Inquiry Confirmation - Master Academy',
-            html: `
-                <h2>Thank you for your interest in Master Academy</h2>
-                <p>Dear ${parentName},</p>
-                <p>We have received your admission inquiry for ${firstName} ${lastName}. Our admissions team will review your application and contact you shortly.</p>
-                <p>Here are the details you submitted:</p>
-                <ul>
-                    <li>Student Name: ${firstName} ${lastName}</li>
-                    <li>Grade Applied For: ${grade}</li>
-                    <li>Contact Email: ${email}</li>
-                    <li>Contact Phone: ${phone}</li>
-                </ul>
-                <p>If you have any questions, please don't hesitate to contact us.</p>
-                <p>Best regards,<br>Master Academy Admissions Team</p>
-            `
-        };
+        try {
+            // Send email to admin
+            await transporter.sendMail(mailOptions);
+            logger.info(`Admin notification sent for ${firstName} ${lastName}`);
 
-        // Send emails
-        await transporter.sendMail(mailOptions);
-        await transporter.sendMail(parentMailOptions);
+            // Send confirmation email to parent
+            const parentMailOptions = {
+                from: `"Master Academy" <${process.env.EMAIL_USER}>`,
+                to: email,
+                subject: 'Admission Inquiry Confirmation - Master Academy',
+                html: `
+                    <h2>Thank you for your interest in Master Academy</h2>
+                    <p>Dear ${parentName},</p>
+                    <p>We have received your admission inquiry for ${firstName} ${lastName}. Our admissions team will review your application and contact you shortly.</p>
+                    <p>Here are the details you submitted:</p>
+                    <ul>
+                        <li>Student Name: ${firstName} ${lastName}</li>
+                        <li>Grade Applied For: ${grade}</li>
+                        <li>Contact Email: ${email}</li>
+                        <li>Contact Phone: ${phone}</li>
+                    </ul>
+                    <p>If you have any questions, please don't hesitate to contact us.</p>
+                    <p>Best regards,<br>Master Academy Admissions Team</p>
+                `
+            };
 
-        logger.info(`Admission inquiry received for ${firstName} ${lastName}`);
-        res.json({ message: 'Admission inquiry submitted successfully' });
+            await transporter.sendMail(parentMailOptions);
+            logger.info(`Confirmation email sent to ${email}`);
+
+            res.json({ message: 'Admission inquiry submitted successfully' });
+        } catch (emailError) {
+            logger.error('Error sending emails:', emailError);
+            throw new Error('Failed to send emails');
+        }
     } catch (error) {
         logger.error('Error processing admission inquiry:', error);
-        res.status(500).json({ error: 'Failed to process admission inquiry' });
+        res.status(500).json({ error: 'Failed to process admission inquiry. Please try again later.' });
     }
 });
 
