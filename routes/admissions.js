@@ -1,8 +1,9 @@
-const express = require('express');
+import { Resend } from 'resend';
+import express from 'express';
+import { body, validationResult } from 'express-validator';
+import logger from '../config/logger.js';
+
 const router = express.Router();
-const { Resend } = require('resend');
-const { body, validationResult } = require('express-validator');
-const logger = require('../config/logger');
 
 // Initialize Resend with API key
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -22,10 +23,54 @@ const validateAdmissionForm = [
     body('terms').equals('true').withMessage('You must accept the terms and conditions')
 ];
 
+// Test endpoint for email
+router.post('/test-email', async (req, res) => {
+    try {
+        console.log('Environment check:', {
+            hasApiKey: !!process.env.RESEND_API_KEY,
+            apiKeyPrefix: process.env.RESEND_API_KEY?.substring(0, 3)
+        });
+
+        if (!process.env.RESEND_API_KEY) {
+            throw new Error('RESEND_API_KEY is not configured');
+        }
+
+        const { data, error } = await resend.emails.send({
+            from: 'Master Academy <onboarding@resend.dev>',
+            to: ['khush1234nayak@gmail.com'],
+            subject: 'Test Email - ' + new Date().toLocaleTimeString(),
+            html: `
+                <h1>Test Email</h1>
+                <p>This is a test email sent at: ${new Date().toLocaleString()}</p>
+                <p>If you receive this, the email configuration is working correctly!</p>
+            `
+        });
+
+        if (error) {
+            console.error('Error sending email:', error);
+            throw error;
+        }
+
+        console.log('Email sent successfully:', data);
+        res.json({
+            success: true,
+            message: 'Test email sent successfully',
+            data
+        });
+
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to send test email',
+            message: error.message
+        });
+    }
+});
+
 // Handle admission form submission
 router.post('/send-admission', validateAdmissionForm, async (req, res) => {
     try {
-        // Check for validation errors
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() });
@@ -49,9 +94,9 @@ router.post('/send-admission', validateAdmissionForm, async (req, res) => {
 
         try {
             // Send email to admin
-            await resend.emails.send({
+            const { data: adminEmailData, error: adminEmailError } = await resend.emails.send({
                 from: 'Master Academy <onboarding@resend.dev>',
-                to: process.env.ADMIN_EMAIL,
+                to: ['khush1234nayak@gmail.com'],
                 subject: 'New Admission Inquiry',
                 html: `
                     <h2>New Admission Inquiry</h2>
@@ -75,12 +120,16 @@ router.post('/send-admission', validateAdmissionForm, async (req, res) => {
                 `
             });
 
+            if (adminEmailError) {
+                throw adminEmailError;
+            }
+
             logger.info(`Admin notification sent for ${firstName} ${lastName}`);
 
             // Send confirmation email to parent
-            await resend.emails.send({
+            const { data: parentEmailData, error: parentEmailError } = await resend.emails.send({
                 from: 'Master Academy <onboarding@resend.dev>',
-                to: email,
+                to: [email],
                 subject: 'Admission Inquiry Confirmation - Master Academy',
                 html: `
                     <h2>Thank you for your interest in Master Academy</h2>
@@ -98,8 +147,16 @@ router.post('/send-admission', validateAdmissionForm, async (req, res) => {
                 `
             });
 
+            if (parentEmailError) {
+                throw parentEmailError;
+            }
+
             logger.info(`Confirmation email sent to ${email}`);
-            res.json({ message: 'Admission inquiry submitted successfully' });
+            res.json({ 
+                message: 'Admission inquiry submitted successfully',
+                adminEmailId: adminEmailData.id,
+                parentEmailId: parentEmailData.id
+            });
         } catch (emailError) {
             logger.error('Error sending emails:', emailError);
             throw new Error('Failed to send emails');
@@ -110,80 +167,4 @@ router.post('/send-admission', validateAdmissionForm, async (req, res) => {
     }
 });
 
-// Test endpoint for email
-router.post('/test-email', async (req, res) => {
-    try {
-        // Log environment variables (safely)
-        console.log('Environment check:', {
-            hasApiKey: !!process.env.RESEND_API_KEY,
-            apiKeyPrefix: process.env.RESEND_API_KEY?.substring(0, 3)
-        });
-
-        // Validate API key
-        if (!process.env.RESEND_API_KEY) {
-            throw new Error('RESEND_API_KEY is not configured');
-        }
-
-        // Create test email data
-        const emailData = {
-            from: 'Master Academy <onboarding@resend.dev>',
-            to: 'khush1234nayak@gmail.com', // Your personal email that's verified with Resend
-            subject: 'Test Email from Master Academy - ' + new Date().toLocaleTimeString(),
-            html: `
-                <h1>Test Email</h1>
-                <p>This is a test email sent at: ${new Date().toLocaleString()}</p>
-                <p>If you receive this, the email configuration is working correctly!</p>
-                <p>Sent to: khush1234nayak@gmail.com</p>
-            `,
-            tags: [
-                {
-                    name: 'test',
-                    value: 'true'
-                }
-            ]
-        };
-
-        console.log('Attempting to send email with data:', {
-            ...emailData,
-            to: emailData.to // Showing full email for debugging
-        });
-
-        // Send the email
-        const result = await resend.emails.send(emailData);
-
-        console.log('Email sent successfully:', result);
-
-        // Return success response
-        res.json({
-            success: true,
-            message: 'Test email sent successfully',
-            emailId: result.id,
-            sentTo: emailData.to,
-            timestamp: new Date().toISOString()
-        });
-
-    } catch (error) {
-        // Log the full error
-        console.error('Detailed error:', {
-            message: error.message,
-            name: error.name,
-            stack: error.stack,
-            details: error.details || 'No additional details'
-        });
-
-        // Return error response with more details
-        res.status(500).json({
-            success: false,
-            error: 'Failed to send test email',
-            message: error.message,
-            details: {
-                apiKeyConfigured: !!process.env.RESEND_API_KEY,
-                errorType: error.name,
-                timestamp: new Date().toISOString(),
-                errorDetails: error.details || 'No additional details'
-            }
-        });
-    }
-});
-
-module.exports = router; 
+export default router; 
