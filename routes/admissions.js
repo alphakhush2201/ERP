@@ -99,6 +99,9 @@ router.post('/send-admission', validateAdmissionForm, async (req, res) => {
             reasonForLeaving
         } = req.body;
 
+        let adminEmailSent = false;
+        let parentEmailSent = false;
+
         try {
             // Send email to admin
             const { data: adminEmailData, error: adminEmailError } = await resend.emails.send({
@@ -131,41 +134,53 @@ router.post('/send-admission', validateAdmissionForm, async (req, res) => {
                 throw adminEmailError;
             }
 
+            adminEmailSent = true;
             logger.info(`Admin notification sent for ${firstName} ${lastName}`);
 
-            // Send confirmation email to parent
-            const { data: parentEmailData, error: parentEmailError } = await resend.emails.send({
-                from: EMAIL_CONFIG.from,
-                to: [email],
-                subject: `Admission Inquiry Confirmation - ${EMAIL_CONFIG.schoolName}`,
-                html: `
-                    <h2>Thank you for your interest in ${EMAIL_CONFIG.schoolName}</h2>
-                    <p>Dear ${parentName},</p>
-                    <p>We have received your admission inquiry for ${firstName} ${lastName}. Our admissions team will review your application and contact you shortly.</p>
-                    <p>Here are the details you submitted:</p>
-                    <ul>
-                        <li>Student Name: ${firstName} ${lastName}</li>
-                        <li>Grade Applied For: ${grade}</li>
-                        <li>Contact Email: ${email}</li>
-                        <li>Contact Phone: ${phone}</li>
-                    </ul>
-                    <p>If you have any questions, please don't hesitate to contact us.</p>
-                    <p>Best regards,<br>${EMAIL_CONFIG.schoolName} Admissions Team</p>
-                `
-            });
+            // Try to send confirmation email to parent
+            try {
+                const { data: parentEmailData, error: parentEmailError } = await resend.emails.send({
+                    from: EMAIL_CONFIG.from,
+                    to: [email],
+                    subject: `Admission Inquiry Confirmation - ${EMAIL_CONFIG.schoolName}`,
+                    html: `
+                        <h2>Thank you for your interest in ${EMAIL_CONFIG.schoolName}</h2>
+                        <p>Dear ${parentName},</p>
+                        <p>We have received your admission inquiry for ${firstName} ${lastName}. Our admissions team will review your application and contact you shortly.</p>
+                        <p>Here are the details you submitted:</p>
+                        <ul>
+                            <li>Student Name: ${firstName} ${lastName}</li>
+                            <li>Grade Applied For: ${grade}</li>
+                            <li>Contact Email: ${email}</li>
+                            <li>Contact Phone: ${phone}</li>
+                        </ul>
+                        <p>If you have any questions, please don't hesitate to contact us.</p>
+                        <p>Best regards,<br>${EMAIL_CONFIG.schoolName} Admissions Team</p>
+                    `
+                });
 
-            if (parentEmailError) {
-                throw parentEmailError;
+                if (!parentEmailError) {
+                    parentEmailSent = true;
+                    logger.info(`Confirmation email sent to ${email}`);
+                }
+            } catch (parentEmailError) {
+                logger.warn(`Could not send confirmation email to parent: ${parentEmailError.message}`);
             }
 
-            logger.info(`Confirmation email sent to ${email}`);
+            // Return success if at least admin email was sent
             res.json({ 
                 message: 'Admission inquiry submitted successfully',
-                success: true
+                success: true,
+                details: {
+                    adminNotified: adminEmailSent,
+                    confirmationEmailSent: parentEmailSent,
+                    note: !parentEmailSent ? 'Confirmation email could not be sent. Our team will contact you shortly.' : undefined
+                }
             });
+
         } catch (emailError) {
             logger.error('Error sending emails:', emailError);
-            throw new Error('Failed to send emails');
+            throw new Error('Failed to process admission inquiry');
         }
     } catch (error) {
         logger.error('Error processing admission inquiry:', error);
