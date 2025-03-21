@@ -1,8 +1,13 @@
-const sqlite3 = require('sqlite3');
-const { open } = require('sqlite');
-const path = require('path');
-const logger = require('./logger');
-require('dotenv').config();
+import sqlite3 from 'sqlite3';
+import { open } from 'sqlite';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import logger from './logger.js';
+import 'dotenv/config';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 async function getDbConnection() {
     try {
@@ -72,4 +77,4 @@ async function getDb() {
     return dbInstance;
 }
 
-module.exports = getDb; 
+export default getDb; 
