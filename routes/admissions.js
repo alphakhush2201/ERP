@@ -113,13 +113,14 @@ router.post('/send-admission', validateAdmissionForm, async (req, res) => {
 // Test endpoint for email
 router.post('/test-email', async (req, res) => {
     try {
-        // Log the configuration
-        logger.info('Attempting to send test email with config:', {
-            from: 'Master Academy <onboarding@resend.dev>',
-            to: process.env.ADMIN_EMAIL,
-            hasApiKey: !!process.env.RESEND_API_KEY
+        // Log environment variables (safely)
+        console.log('Environment check:', {
+            hasApiKey: !!process.env.RESEND_API_KEY,
+            apiKeyPrefix: process.env.RESEND_API_KEY?.substring(0, 3),
+            adminEmail: process.env.ADMIN_EMAIL
         });
 
+        // Validate environment variables
         if (!process.env.RESEND_API_KEY) {
             throw new Error('RESEND_API_KEY is not configured');
         }
@@ -128,32 +129,55 @@ router.post('/test-email', async (req, res) => {
             throw new Error('ADMIN_EMAIL is not configured');
         }
 
-        const result = await resend.emails.send({
+        // Create test email data
+        const emailData = {
             from: 'Master Academy <onboarding@resend.dev>',
             to: process.env.ADMIN_EMAIL,
             subject: 'Test Email from Master Academy',
-            html: '<h1>Test Email</h1><p>This is a test email to verify the Resend configuration.</p>'
+            html: `
+                <h1>Test Email</h1>
+                <p>This is a test email sent at: ${new Date().toISOString()}</p>
+                <p>If you receive this, the email configuration is working correctly!</p>
+            `
+        };
+
+        console.log('Attempting to send email with data:', {
+            ...emailData,
+            to: emailData.to.substring(0, 10) + '...' // Truncate for privacy
         });
 
-        logger.info('Test email sent successfully. Response:', result);
-        res.json({ 
-            message: 'Test email sent successfully', 
-            result,
-            sentTo: process.env.ADMIN_EMAIL,
-            apiKeyConfigured: !!process.env.RESEND_API_KEY
+        // Send the email
+        const result = await resend.emails.send(emailData);
+
+        console.log('Email sent successfully:', result);
+
+        // Return success response
+        res.json({
+            success: true,
+            message: 'Test email sent successfully',
+            emailId: result.id,
+            sentTo: process.env.ADMIN_EMAIL
         });
+
     } catch (error) {
-        logger.error('Error sending test email:', {
-            error: error.message,
+        // Log the full error
+        console.error('Detailed error:', {
+            message: error.message,
+            name: error.name,
             stack: error.stack,
-            apiKeyConfigured: !!process.env.RESEND_API_KEY,
-            adminEmailConfigured: !!process.env.ADMIN_EMAIL
+            details: error.details || 'No additional details'
         });
-        res.status(500).json({ 
-            error: 'Failed to send test email', 
-            details: error.message,
-            apiKeyConfigured: !!process.env.RESEND_API_KEY,
-            adminEmailConfigured: !!process.env.ADMIN_EMAIL
+
+        // Return error response
+        res.status(500).json({
+            success: false,
+            error: 'Failed to send test email',
+            message: error.message,
+            details: {
+                apiKeyConfigured: !!process.env.RESEND_API_KEY,
+                adminEmailConfigured: !!process.env.ADMIN_EMAIL,
+                errorType: error.name
+            }
         });
     }
 });
