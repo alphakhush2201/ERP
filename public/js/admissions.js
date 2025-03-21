@@ -10,9 +10,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const data = {};
         
         formData.forEach((value, key) => {
-            // For checkbox, we need to send its checked state
             if (key === 'terms') {
-                data[key] = formData.get(key) === 'on';
+                // Convert checkbox to boolean string for validation
+                data[key] = formData.get(key) === 'on' ? 'true' : 'false';
             } else {
                 data[key] = value;
             }
@@ -30,7 +30,9 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => {
             console.log('Response status:', response.status);
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                return response.json().then(err => {
+                    throw new Error(err.errors ? err.errors.map(e => e.msg).join(', ') : 'Submission failed');
+                });
             }
             return response.json();
         })
@@ -45,7 +47,7 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('An error occurred while submitting your inquiry. Please try again later.');
+            alert(error.message || 'An error occurred while submitting your inquiry. Please try again later.');
         });
     });
 });
