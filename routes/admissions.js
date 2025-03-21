@@ -1,32 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 const { body, validationResult } = require('express-validator');
 const logger = require('../config/logger');
 
-// Create a transporter using nodemailer with OAuth2
-const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
-    auth: {
-        type: 'OAuth2',
-        user: process.env.EMAIL_USER,
-        clientId: process.env.GMAIL_CLIENT_ID,
-        clientSecret: process.env.GMAIL_CLIENT_SECRET,
-        refreshToken: process.env.GMAIL_REFRESH_TOKEN,
-        accessToken: process.env.GMAIL_ACCESS_TOKEN
-    }
-});
-
-// Test email configuration
-transporter.verify(function(error, success) {
-    if (error) {
-        logger.error('Email configuration error:', error);
-    } else {
-        logger.info('Email server is ready to send messages');
-    }
-});
+// Initialize Resend with API key
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Validation middleware
 const validateAdmissionForm = [
@@ -68,41 +47,39 @@ router.post('/send-admission', validateAdmissionForm, async (req, res) => {
             reasonForLeaving
         } = req.body;
 
-        // Create email content
-        const mailOptions = {
-            from: `"Master Academy" <${process.env.EMAIL_USER}>`,
-            to: process.env.ADMIN_EMAIL || process.env.EMAIL_USER,
-            subject: 'New Admission Inquiry',
-            html: `
-                <h2>New Admission Inquiry</h2>
-                <h3>Student Information:</h3>
-                <p><strong>Name:</strong> ${firstName} ${lastName}</p>
-                <p><strong>Date of Birth:</strong> ${dob}</p>
-                <p><strong>Gender:</strong> ${gender}</p>
-                <p><strong>Applying for Grade:</strong> ${grade}</p>
-
-                <h3>Parent/Guardian Information:</h3>
-                <p><strong>Name:</strong> ${parentName}</p>
-                <p><strong>Relationship:</strong> ${relationship}</p>
-                <p><strong>Email:</strong> ${email}</p>
-                <p><strong>Phone:</strong> ${phone}</p>
-                ${altPhone ? `<p><strong>Alternative Phone:</strong> ${altPhone}</p>` : ''}
-                <p><strong>Address:</strong> ${address}</p>
-
-                <h3>Previous School Information:</h3>
-                ${prevSchool ? `<p><strong>Previous School:</strong> ${prevSchool}</p>` : ''}
-                ${reasonForLeaving ? `<p><strong>Reason for Leaving:</strong> ${reasonForLeaving}</p>` : ''}
-            `
-        };
-
         try {
             // Send email to admin
-            await transporter.sendMail(mailOptions);
+            await resend.emails.send({
+                from: 'Master Academy <admissions@masteracademy.com>',
+                to: process.env.ADMIN_EMAIL,
+                subject: 'New Admission Inquiry',
+                html: `
+                    <h2>New Admission Inquiry</h2>
+                    <h3>Student Information:</h3>
+                    <p><strong>Name:</strong> ${firstName} ${lastName}</p>
+                    <p><strong>Date of Birth:</strong> ${dob}</p>
+                    <p><strong>Gender:</strong> ${gender}</p>
+                    <p><strong>Applying for Grade:</strong> ${grade}</p>
+
+                    <h3>Parent/Guardian Information:</h3>
+                    <p><strong>Name:</strong> ${parentName}</p>
+                    <p><strong>Relationship:</strong> ${relationship}</p>
+                    <p><strong>Email:</strong> ${email}</p>
+                    <p><strong>Phone:</strong> ${phone}</p>
+                    ${altPhone ? `<p><strong>Alternative Phone:</strong> ${altPhone}</p>` : ''}
+                    <p><strong>Address:</strong> ${address}</p>
+
+                    <h3>Previous School Information:</h3>
+                    ${prevSchool ? `<p><strong>Previous School:</strong> ${prevSchool}</p>` : ''}
+                    ${reasonForLeaving ? `<p><strong>Reason for Leaving:</strong> ${reasonForLeaving}</p>` : ''}
+                `
+            });
+
             logger.info(`Admin notification sent for ${firstName} ${lastName}`);
 
             // Send confirmation email to parent
-            const parentMailOptions = {
-                from: `"Master Academy" <${process.env.EMAIL_USER}>`,
+            await resend.emails.send({
+                from: 'Master Academy <admissions@masteracademy.com>',
                 to: email,
                 subject: 'Admission Inquiry Confirmation - Master Academy',
                 html: `
@@ -119,11 +96,9 @@ router.post('/send-admission', validateAdmissionForm, async (req, res) => {
                     <p>If you have any questions, please don't hesitate to contact us.</p>
                     <p>Best regards,<br>Master Academy Admissions Team</p>
                 `
-            };
+            });
 
-            await transporter.sendMail(parentMailOptions);
             logger.info(`Confirmation email sent to ${email}`);
-
             res.json({ message: 'Admission inquiry submitted successfully' });
         } catch (emailError) {
             logger.error('Error sending emails:', emailError);
