@@ -4,9 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "node server.js",
-    "build": "echo 'Building...'",
+    "build": "npm rebuild sqlite3",
     "start": "node server.js",
-    "vercel-build": "echo 'Vercel build complete'"
+    "vercel-build": "npm rebuild sqlite3 && echo 'Vercel build complete'"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
