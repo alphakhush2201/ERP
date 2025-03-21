@@ -30,10 +30,11 @@ if (process.env.NODE_ENV === 'production') {
         contentSecurityPolicy: {
             directives: {
                 defaultSrc: ["'self'"],
-                styleSrc: ["'self'", "'unsafe-inline'"],
+                styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
                 scriptSrc: ["'self'", "'unsafe-inline'"],
                 imgSrc: ["'self'", "data:", "https:"],
                 connectSrc: ["'self'", "https:"],
+                fontSrc: ["'self'", "https://fonts.gstatic.com"],
             },
         },
     }));
@@ -58,7 +59,7 @@ const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 100 // limit each IP to 100 requests per windowMs
 });
-app.use(limiter);
+app.use('/api', limiter); // Apply rate limiting only to API routes
 
 // Logging middleware
 app.use(morgan('combined', { stream: { write: message => logger.info(message.trim()) } }));
@@ -67,8 +68,24 @@ app.use(morgan('combined', { stream: { write: message => logger.info(message.tri
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Static files
+// Static files - serve before API routes
 app.use(express.static(path.join(__dirname, 'public')));
+
+// API Routes
+app.use('/api/auth', authRoutes);
+// Comment out until student routes are implemented
+// app.use('/api/students', studentRoutes);
+
+// Handle HTML routes - serve the appropriate HTML file
+app.get('/*.html', (req, res) => {
+    const htmlFile = path.join(__dirname, 'public', req.path);
+    res.sendFile(htmlFile);
+});
+
+// Serve index.html for the root path
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -78,16 +95,6 @@ app.use((err, req, res, next) => {
         message: 'Internal Server Error',
         error: process.env.NODE_ENV === 'development' ? err.message : undefined
     });
-});
-
-// Routes
-app.use('/api/auth', authRoutes);
-// Comment out until student routes are implemented
-// app.use('/api/students', studentRoutes);
-
-// Serve static files
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // Graceful shutdown
