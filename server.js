@@ -46,91 +46,79 @@ app.use(helmet({
     },
 }));
 
-app.use(cors({
+// CORS configuration
+const corsOptions = {
     origin: process.env.CORS_ORIGIN || '*',
-    credentials: true
-}));
-
-app.use(cookieParser());
-
-// Session configuration
-app.use(session({
-    secret: process.env.SESSION_SECRET || 'fallback-secret-key',
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-        secure: true,
-        httpOnly: true,
-        maxAge: 24 * 60 * 60 * 1000, // 24 hours
-        sameSite: 'none'
-    }
-}));
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+    maxAge: 600
+};
+app.use(cors(corsOptions));
 
 // Rate limiting
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 100 // limit each IP to 100 requests per windowMs
 });
-app.use('/api', limiter);
+app.use('/api/', limiter);
 
-// Logging middleware - use console in production for Vercel logs
-if (process.env.NODE_ENV === 'production') {
-    app.use(morgan('combined'));
-} else {
-    app.use(morgan('combined', { stream: { write: message => logger.info(message.trim()) } }));
-}
-
-// Body parsing middleware
+// Middleware
+app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
-// Static files - serve before API routes
+// Session configuration
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'your-secret-key',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        secure: process.env.NODE_ENV === 'production',
+        httpOnly: true,
+        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    }
+}));
+
+// Static files
 app.use(express.static(path.join(__dirname, 'public')));
 
-// API Routes
+// Routes
 app.use('/api/auth', authRoutes);
-app.use('/api', admissionsRouter);
+app.use('/api/admissions', admissionsRouter);
 // Comment out until student routes are implemented
 // app.use('/api/students', studentRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-    res.json({ status: 'healthy', environment: process.env.NODE_ENV });
-});
-
-// Handle HTML routes - serve the appropriate HTML file
-app.get('/*.html', (req, res) => {
-    const htmlFile = path.join(__dirname, 'public', req.path);
-    res.sendFile(htmlFile);
-});
-
-// Serve index.html for the root path
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    res.status(200).json({ status: 'healthy' });
 });
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-    console.error(err.stack);
+    logger.error(err.stack);
     res.status(500).json({
-        success: false,
-        message: 'Internal Server Error',
-        error: process.env.NODE_ENV === 'development' ? err.message : undefined
+        error: process.env.NODE_ENV === 'production' ? 'Internal Server Error' : err.message
     });
 });
 
-// Handle unhandled rejections
-process.on('unhandledRejection', (err) => {
-    console.error('Unhandled Promise Rejection:', err);
+// Handle 404
+app.use((req, res) => {
+    if (req.path.startsWith('/api/')) {
+        return res.status(404).json({ error: 'API endpoint not found' });
+    }
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Export the app for Vercel
-export default app;
+const PORT = process.env.PORT || 3000;
 
-// Start the server if not in production (Vercel handles this in production)
+// Only listen if not being run by Vercel
 if (process.env.NODE_ENV !== 'production') {
-    const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => {
-        logger.info(`Server running on port ${PORT} in ${process.env.NODE_ENV} mode`);
+        logger.info(`Server running on port ${PORT}`);
     });
 }
+
+// Export for Vercel
+export default app;
