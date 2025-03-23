@@ -12,27 +12,19 @@
   ],
   "routes": [
     {
-      "src": "/api/health",
-      "dest": "/api/health.js"
-    },
-    {
-      "src": "/api/send-admission",
-      "dest": "/api/send-admission.js"
-    },
-    {
-      "src": "/api/auth/login",
-      "dest": "/api/auth/login.js"
-    },
-    {
       "src": "/api/(.*)",
-      "dest": "/api/$1"
+      "dest": "server.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "public/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "public/index.html"
     },
     {
       "handle": "filesystem"
-    },
-    {
-      "src": "/",
-      "dest": "/public/index.html"
     },
     {
       "src": "/admin-login",
@@ -77,13 +69,10 @@
     {
       "src": "/images/(.*)",
       "dest": "/public/images/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/public/$1"
     }
   ],
   "env": {
-    "NODE_ENV": "production"
+    "NODE_ENV": "production",
+    "PORT": "3000"
   }
 }
