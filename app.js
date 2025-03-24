@@ -10,8 +10,10 @@ const app = express();
 
 // CORS configuration
 app.use(cors({
-    origin: 'http://127.0.0.1:5500', // Live Server default URL
-    credentials: true
+    origin: ['http://localhost:3000', 'https://masteracademt.vercel.app'],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 // Middleware
