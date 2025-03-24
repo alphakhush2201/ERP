@@ -42,6 +42,8 @@
 
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            console.log(document.getElementById('email').value);
+            console.log(document.getElementById('password').value);
             errorMessage.style.display = 'none';
             
             try {
