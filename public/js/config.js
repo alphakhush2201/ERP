@@ -4,17 +4,15 @@ const ENV = {
         API_URL: 'http://localhost:3000/api'
     },
     production: {
-        // In production (Vercel), use relative path and let the routing handle it
-        API_URL: '/api'
+        // Use the deployed API URL
+        API_URL: 'https://masteracademt.vercel.app/api'
     }
 };
 
 // Determine current environment
 const isDevelopment = 
     window.location.hostname === 'localhost' || 
-    window.location.hostname === '127.0.0.1' ||
-    window.location.hostname.includes('gitpod.io') ||
-    window.location.hostname.includes('stackblitz.io');
+    window.location.hostname === '127.0.0.1';
 
 const currentEnv = isDevelopment ? 'development' : 'production';
 
