@@ -12,7 +12,7 @@
     <div class="login-container">
         <div class="login-box">
             <div class="logo-container">
-                <img src="../images/logo.png" alt="School Logo" class="logo">
+                <img src="../images/logo.png" alt="School Logo" class="logo" onerror="this.style.display='none'">
                 <h2>School ERP</h2>
             </div>
             <h2>Admin Login</h2>
@@ -42,36 +42,68 @@
 
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            console.log(document.getElementById('email').value);
-            console.log(document.getElementById('password').value);
             errorMessage.style.display = 'none';
             
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
             try {
+                console.log('Attempting login with:', API_URL);
                 const response = await fetch(`${API_URL}/users/login`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
                     },
-                    body: JSON.stringify({
-                        email: document.getElementById('email').value,
-                        password: document.getElementById('password').value
+                    mode: 'cors',
+                    body: JSON.stringify({ 
+                        email: email.trim(), 
+                        password: password.trim() 
                     })
                 });
 
-                const data = await response.json();
+                // Log response details for debugging
+                console.log('Response status:', response.status);
+                console.log('Response headers:', Object.fromEntries(response.headers.entries()));
 
-                if (response.ok) {
+                // First check if the response is ok
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        throw new Error('Login service is not available. Please try again later.');
+                    }
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || 'Login failed');
+                    } else {
+                        const text = await response.text();
+                        console.error('Non-JSON response:', text);
+                        throw new Error(`Server error (${response.status}). Please try again later.`);
+                    }
+                }
+
+                // Try to parse the JSON response
+                let data;
+                try {
+                    data = await response.json();
+                } catch (e) {
+                    console.error('JSON parse error:', e);
+                    throw new Error('Invalid response from server');
+                }
+
+                if (data.token) {
                     // Store the token
                     localStorage.setItem('token', data.token);
                     // Redirect to admin dashboard
                     window.location.href = '../admin-dashboard/admin-dashboard.html';
                 } else {
-                    throw new Error(data.message || 'Login failed');
+                    console.error('No token in response:', data);
+                    throw new Error('Invalid response from server - no token received');
                 }
             } catch (error) {
-                errorMessage.textContent = error.message;
-                errorMessage.style.display = 'block';
                 console.error('Login error:', error);
+                errorMessage.textContent = error.message || 'Failed to login. Please try again.';
+                errorMessage.style.display = 'block';
             }
         });
     </script>
