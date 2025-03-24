@@ -5,7 +5,7 @@ const ENV = {
     },
     production: {
         // Use the deployed API URL
-        API_URL: 'https://masteracademt.vercel.app/api'
+        API_URL: 'https://masteracademy.vercel.app/api'
     }
 };
 
@@ -29,6 +29,6 @@ config.lastDeployed = new Date().toISOString();
 // API Configuration
 const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? 'http://localhost:3000/api'
-    : 'https://masteracademt.vercel.app/api';
+    : 'https://masteracademy.vercel.app/api';
 
 export { API_URL }; 
