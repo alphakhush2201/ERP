@@ -24,4 +24,12 @@ config.version = '1.0.0';
 
 // Add deployment info
 config.deployedOn = 'vercel';
-config.lastDeployed = new Date().toISOString(); 
+config.lastDeployed = new Date().toISOString();
+
+// Determine if we're in production by checking the hostname
+const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+
+// Set the API URL based on the environment
+export const API_URL = isProduction
+    ? 'https://masteracademt.vercel.app/api'  // Production API URL
+    : 'http://localhost:3000/api';            // Development API URL 
