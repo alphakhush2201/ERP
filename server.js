@@ -13,8 +13,8 @@ import logger from './config/logger.js';
 import initializeDatabase from './config/init-db.js';
 import authRoutes from './routes/auth.js';
 import admissionsRouter from './routes/admissions.js';
-// Comment out or remove until student routes are implemented
-// const studentRoutes = require('./routes/students');
+import studentRoutes from './routes/studentRoutes.js';
+import teacherRoutes from './routes/teacherRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -87,8 +87,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/admissions', admissionsRouter);
-// Comment out until student routes are implemented
-// app.use('/api/students', studentRoutes);
+app.use('/api/students', studentRoutes);
+app.use('/api/teachers', teacherRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

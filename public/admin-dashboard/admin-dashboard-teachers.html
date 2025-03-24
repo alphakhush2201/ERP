@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Teacher Management Dashboard - School ERP System">
+    <title>Teachers Management - School ERP</title>
+    <!-- Preload critical assets -->
+    <link rel="preload" href="../css/style.css" as="style">
+    <link rel="preload" href="../css/teachers.css" as="style">
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/teachers.css">
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="../images/favicon.png">
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <img src="../images/logo.png" alt="School Logo" width="40" height="40">
+                <h2>School ERP</h2>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="admin-dashboard.html"><i class="fas fa-home"></i> Dashboard</a></li>
+                    <li><a href="admin-dashboard-students.html"><i class="fas fa-user-graduate"></i> Students</a></li>
+                    <li><a href="admin-dashboard-teachers.html" class="active"><i class="fas fa-chalkboard-teacher"></i> Teachers</a></li>
+                    <li><a href="admin-dashboard-classes.html"><i class="fas fa-chalkboard"></i> Classes</a></li>
+                    <li><a href="admin-dashboard-schedule.html"><i class="fas fa-calendar-alt"></i> Schedule</a></li>
+                    <li><a href="admin-dashboard-attendance.html"><i class="fas fa-clipboard-check"></i> Attendance</a></li>
+                    <li><a href="admin-dashboard-grades.html"><i class="fas fa-graduation-cap"></i> Grades</a></li>
+                    <li><a href="admin-dashboard-settings.html"><i class="fas fa-cog"></i> Settings</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header>
+                <div class="header-content">
+                    <h1>Teachers Management</h1>
+                    <div class="header-actions">
+                        <div class="search-box">
+                            <input type="text" id="searchInput" placeholder="Search teachers..." aria-label="Search teachers">
+                            <i class="fas fa-search" aria-hidden="true"></i>
+                        </div>
+                        <button id="addTeacherBtn" class="btn-primary">
+                            <i class="fas fa-plus" aria-hidden="true"></i> Add New Teacher
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Loading State -->
+            <div id="loadingState" class="loading-state" style="display: none;">
+                <div class="spinner"></div>
+                <p>Loading teachers...</p>
+            </div>
+
+            <!-- Error State -->
+            <div id="errorState" class="error-state" style="display: none;">
+                <i class="fas fa-exclamation-circle"></i>
+                <h2>Error Loading Teachers</h2>
+                <p id="errorMessage">Unable to load teachers. Please try again.</p>
+                <button class="btn-primary" onclick="fetchTeachers()">
+                    <i class="fas fa-sync"></i> Retry
+                </button>
+            </div>
+
+            <!-- Teachers Table -->
+            <div id="tableContainer" class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Role</th>
+                            <th>Subjects</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="teachersTableBody">
+                        <!-- Teachers will be dynamically added here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <i class="fas fa-users"></i>
+                <h2>No Teachers Found</h2>
+                <p>Add your first teacher to get started</p>
+                <button class="btn-primary" onclick="document.getElementById('addTeacherBtn').click()">
+                    <i class="fas fa-plus"></i> Add New Teacher
+                </button>
+            </div>
+        </main>
+
+        <!-- Teacher Modal -->
+        <div id="teacherModal" class="modal" aria-labelledby="modalTitle" role="dialog" aria-modal="true">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="modalTitle">Add New Teacher</h2>
+                    <button class="close-btn" aria-label="Close modal">&times;</button>
+                </div>
+                <form id="teacherForm" novalidate>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="firstName">First Name</label>
+                            <input type="text" id="firstName" name="firstName" required minlength="2" maxlength="50">
+                            <div class="error-message"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="lastName">Last Name</label>
+                            <input type="text" id="lastName" name="lastName" required minlength="2" maxlength="50">
+                            <div class="error-message"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" name="email" required pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$">
+                            <div class="error-message"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Phone</label>
+                            <input type="tel" id="phone" name="phone" required pattern="[0-9]{10}">
+                            <div class="error-message"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="dateOfBirth">Date of Birth</label>
+                            <input type="date" id="dateOfBirth" name="dateOfBirth" required max="2005-12-31">
+                            <div class="error-message"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="gender">Gender</label>
+                            <select id="gender" name="gender" required>
+                                <option value="">Select Gender</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="other">Other</option>
+                            </select>
+                            <div class="error-message"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="qualification">Qualification</label>
+                            <input type="text" id="qualification" name="qualification" required minlength="2" maxlength="100">
+                            <div class="error-message"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="role">Role</label>
+                            <select id="role" name="role" required>
+                                <option value="">Select Role</option>
+                                <option value="teacher">Teacher</option>
+                                <option value="hod">HOD</option>
+                                <option value="coordinator">Coordinator</option>
+                                <option value="assistant">Assistant</option>
+                            </select>
+                            <div class="error-message"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="subjects">Subjects (comma-separated)</label>
+                            <input type="text" id="subjects" name="subjects" required>
+                            <div class="error-message"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="experience">Experience (years)</label>
+                            <input type="number" id="experience" name="experience" min="0" max="50" required>
+                            <div class="error-message"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="salary">Salary</label>
+                            <input type="number" id="salary" name="salary" min="0" step="0.01" required>
+                            <div class="error-message"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="status">Status</label>
+                            <select id="status" name="status" required>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                                <option value="on_leave">On Leave</option>
+                            </select>
+                            <div class="error-message"></div>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
+                        <button type="submit" class="btn-primary" id="submitBtn">
+                            <span class="button-text">Save Teacher</span>
+                            <span class="button-loader" style="display: none;">
+                                <i class="fas fa-spinner fa-spin"></i>
+                            </span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container for Notifications -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="../js/config.js"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/admin-dashboard-teachers.js"></script>
+</body>
+</html> 

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teachers - Master Academy</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <link rel="stylesheet" href="../css/teachers.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="/images/image.png" alt="Master Academy Logo" class="logo">
+                <h3>Master Academy</h3>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="admin-dashboard.html"><i class="fas fa-home"></i> Dashboard</a>
+                <a href="admin-dasboard-students.html"><i class="fas fa-user-graduate"></i> Students</a>
+                <a href="admin-dasboard-teachers.html" class="active"><i class="fas fa-chalkboard-teacher"></i> Teachers</a>
+                <a href="#"><i class="fas fa-book-open"></i> Courses</a>
+                <a href="#"><i class="fas fa-calendar-alt"></i> Schedule</a>
+                <a href="#"><i class="fas fa-chart-bar"></i> Reports</a>
+                <a href="#"><i class="fas fa-cog"></i> Settings</a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="/index.html"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Header -->
+            <header class="top-header">
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="teacherSearch" placeholder="Search teachers...">
+                </div>
+                <div class="user-menu">
+                    <span class="notifications">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge">3</span>
+                    </span>
+                    <div class="user-info">
+                        <img src="https://via.placeholder.com/40" alt="User Avatar">
+                        <span>Admin User</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Teachers Content -->
+            <div class="teachers-content">
+                <div class="content-header">
+                    <h1>Teachers</h1>
+                    <button class="add-button" onclick="openAddModal()">
+                        <i class="fas fa-plus"></i> Add Teacher
+                    </button>
+                </div>
+
+                <!-- Teachers Table -->
+                <div class="table-container">
+                    <table class="teachers-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="teachersTableBody">
+                            <!-- Teacher rows will be dynamically added here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add/Edit Teacher Modal -->
+    <div id="teacherModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2 id="modalTitle">Add Teacher</h2>
+            <form id="teacherForm" onsubmit="handleSubmit(event)">
+                <div class="form-group">
+                    <label for="firstName">First Name</label>
+                    <input type="text" id="firstName" name="firstName" required>
+                </div>
+                <div class="form-group">
+                    <label for="lastName">Last Name</label>
+                    <input type="text" id="lastName" name="lastName" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="phone">Phone</label>
+                    <input type="tel" id="phone" name="phone" required>
+                </div>
+                <div class="form-group">
+                    <label for="dateOfBirth">Date of Birth</label>
+                    <input type="date" id="dateOfBirth" name="dateOfBirth" required>
+                </div>
+                <div class="form-group">
+                    <label for="gender">Gender</label>
+                    <select id="gender" name="gender" required>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="qualification">Qualification</label>
+                    <input type="text" id="qualification" name="qualification" required>
+                </div>
+                <div class="form-group">
+                    <label for="role">Role</label>
+                    <select id="role" name="role" required>
+                        <option value="teacher">Teacher</option>
+                        <option value="hod">Head of Department</option>
+                        <option value="coordinator">Coordinator</option>
+                        <option value="assistant">Teaching Assistant</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="subjects">Subjects (comma-separated)</label>
+                    <input type="text" id="subjects" name="subjects" required>
+                </div>
+                <div class="form-group">
+                    <label for="experience">Experience (years)</label>
+                    <input type="number" id="experience" name="experience" required min="0">
+                </div>
+                <div class="form-group">
+                    <label for="salary">Salary</label>
+                    <input type="number" id="salary" name="salary" required min="0" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label for="status">Status</label>
+                    <select id="status" name="status">
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                        <option value="on_leave">On Leave</option>
+                    </select>
+                </div>
+                <input type="hidden" id="teacherId">
+                <button type="submit" class="submit-button">Save Teacher</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="../js/teachers.js"></script>
+</body>
+</html> 

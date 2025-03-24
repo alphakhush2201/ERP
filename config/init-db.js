@@ -1,44 +1,26 @@
-import getDb from './database.js';
+import sequelize from './database.js';
+import '../models/associations.js';
 import logger from './logger.js';
 
 async function initializeDatabase() {
     try {
-        const db = await getDb();
-        
-        // Create tables if they don't exist
-        await db.exec(`
-            CREATE TABLE IF NOT EXISTS users (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                username TEXT UNIQUE NOT NULL,
-                password TEXT NOT NULL,
-                role TEXT NOT NULL,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            );
+        // Test the connection
+        await sequelize.authenticate();
+        logger.info('Database connection established');
 
-            CREATE TABLE IF NOT EXISTS students (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                email TEXT UNIQUE,
-                class TEXT NOT NULL,
-                roll_number TEXT UNIQUE NOT NULL,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            );
+        // Drop all tables
+        await sequelize.drop({ force: true });
+        logger.info('All tables dropped');
 
-            CREATE TABLE IF NOT EXISTS fees (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                student_id INTEGER NOT NULL,
-                amount DECIMAL(10,2) NOT NULL,
-                payment_date DATETIME DEFAULT CURRENT_TIMESTAMP,
-                status TEXT NOT NULL,
-                FOREIGN KEY (student_id) REFERENCES students(id)
-            );
-        `);
+        // Recreate all tables
+        await sequelize.sync({ force: true });
+        logger.info('All tables recreated');
 
-        logger.info('Database initialized successfully');
+        logger.info('Database initialization completed');
     } catch (error) {
-        logger.error('Error initializing database:', error);
-        throw error;
+        logger.error('Database initialization failed:', error);
+        process.exit(1);
     }
 }
 
-export default initializeDatabase; 
+initializeDatabase();

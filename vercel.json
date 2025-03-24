@@ -1,78 +1,13 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "server.js",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "public/**",
-      "use": "@vercel/static"
-    }
-  ],
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "server.js"
+      "dest": "/server.js"
     },
     {
       "src": "/(.*)",
-      "dest": "public/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "public/index.html"
-    },
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/admin-login",
-      "dest": "/public/admin-login.html"
-    },
-    {
-      "src": "/teacher-login",
-      "dest": "/public/teacher-login.html"
-    },
-    {
-      "src": "/students-login",
-      "dest": "/public/students-login.html"
-    },
-    {
-      "src": "/dashboard",
-      "dest": "/public/dashboard.html"
-    },
-    {
-      "src": "/admissions",
-      "dest": "/public/admissions.html"
-    },
-    {
-      "src": "/fees",
-      "dest": "/public/fees.html"
-    },
-    {
-      "src": "/students",
-      "dest": "/public/students.html"
-    },
-    {
-      "src": "/teacher-dashboard",
-      "dest": "/public/teacher-dashboard.html"
-    },
-    {
-      "src": "/css/(.*)",
-      "dest": "/public/css/$1"
-    },
-    {
-      "src": "/js/(.*)",
-      "dest": "/public/js/$1"
-    },
-    {
-      "src": "/images/(.*)",
-      "dest": "/public/images/$1"
+      "dest": "/public/$1"
     }
-  ],
-  "env": {
-    "NODE_ENV": "production",
-    "PORT": "3000"
-  }
+  ]
 }
