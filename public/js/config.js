@@ -5,7 +5,7 @@ const ENV = {
     },
     production: {
         // Use the deployed API URL
-        API_URL: 'https://masteracademy.vercel.app/api'
+        API_URL: 'https://masteracademt.vercel.app/api'
     }
 };
 
@@ -31,5 +31,5 @@ const isProduction = window.location.hostname !== 'localhost' && window.location
 
 // Set the API URL based on the environment
 export const API_URL = isProduction
-    ? 'https://masteracademy.vercel.app/api'  // Production API URL
+    ? 'https://masteracademt.vercel.app/api'  // Production API URL
     : 'http://localhost:3000/api';            // Development API URL 
