@@ -1,11 +1,8 @@
-const sqlite3 = require('sqlite3').verbose();
-const jwt = require('jsonwebtoken');
-const path = require('path');
+import jwt from 'jsonwebtoken';
+import { query } from '../../utils/db.js';
+import 'dotenv/config';
 
-// Database path
-const dbPath = path.resolve(process.cwd(), 'database.sqlite');
-
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   console.log('Students API called with method:', req.method);
   
   // Get authorization header
@@ -20,18 +17,7 @@ module.exports = async function handler(req, res) {
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
     
-    // Create a new database connection
-    const db = new sqlite3.Database(dbPath);
-    
-    // Promisify db functions
-    const all = (sql, params = []) => {
-      return new Promise((resolve, reject) => {
-        db.all(sql, params, (err, rows) => {
-          if (err) return reject(err);
-          resolve(rows);
-        });
-      });
-    };
+    // Use PostgreSQL connection
     
     try {
       // Handle GET request - fetch students
@@ -39,20 +25,22 @@ module.exports = async function handler(req, res) {
         console.log('Fetching students from database');
         
         // Check if students table exists
-        const tableExists = await all(
-          `SELECT name FROM sqlite_master WHERE type='table' AND name='students'`
+        const tableExists = await query(
+          `SELECT to_regclass('public.students') as table_exists`
         );
         
-        if (tableExists.length === 0) {
+        if (!tableExists.rows[0].table_exists) {
           console.error('Students table does not exist');
           return res.status(500).json({ error: 'Students table does not exist' });
         }
         
-        const students = await all(`
+        const studentsResult = await query(`
           SELECT id, student_id, first_name, last_name, grade
           FROM students
           ORDER BY grade, last_name, first_name
         `);
+        
+        const students = studentsResult.rows;
         
         console.log(`Found ${students.length} students`);
         
@@ -66,9 +54,6 @@ module.exports = async function handler(req, res) {
     } catch (error) {
       console.error('Error handling request:', error);
       res.status(500).json({ error: 'Internal server error: ' + error.message });
-    } finally {
-      // Close the database connection
-      db.close();
     }
   } catch (error) {
     console.error('Token verification error:', error);

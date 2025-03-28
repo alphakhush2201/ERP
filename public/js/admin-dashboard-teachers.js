@@ -1,5 +1,7 @@
-// Import API configuration
-import { API_URL } from './config.js';
+// API configuration
+const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:3000/api'
+    : 'https://masteracademt.vercel.app/api';
 
 // DOM Elements
 const addTeacherForm = document.getElementById('addTeacherForm');
@@ -155,4 +157,4 @@ window.showAddTeacherModal = function() {
     addTeacherForm.dataset.mode = 'add';
     delete addTeacherForm.dataset.teacherId;
     modal.style.display = 'block';
-}; 
+};

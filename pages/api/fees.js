@@ -1,51 +1,51 @@
-const express = require('express');
-const router = express.Router();
-const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
-const jwt = require('jsonwebtoken');
+import jwt from 'jsonwebtoken';
+import { query } from '../../utils/db.js';
+import 'dotenv/config';
 
-// Database path
-const dbPath = path.resolve(process.cwd(), 'database.sqlite');
-
-// Middleware to verify token
-const verifyToken = (req, res, next) => {
+// Helper function to verify token
+const verifyToken = (req, res) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Unauthorized' });
+    return null;
   }
 
   const token = authHeader.split(' ')[1];
   
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
-    req.user = decoded;
-    next();
+    return decoded;
   } catch (error) {
-    return res.status(401).json({ error: 'Invalid token' });
+    return null;
   }
 };
 
-// GET all fees
-router.get('/', verifyToken, (req, res) => {
+export default async function handler(req, res) {
+  // Verify token
+  const user = verifyToken(req, res);
+  if (!user) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  
+  // GET all fees
+  if (req.method === 'GET') {
   console.log('GET /api/fees called');
   
-  const db = new sqlite3.Database(dbPath);
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10;
-  const offset = (page - 1) * limit;
-  const search = req.query.search || '';
-  const grade = req.query.grade || '';
-  const status = req.query.status || '';
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+    const search = req.query.search || '';
+    const grade = req.query.grade || '';
+    const status = req.query.status || '';
   
-  // Build the query
-  let query = `
-    SELECT f.*, s.student_id, s.first_name || ' ' || s.last_name as student_name, s.grade
-    FROM fees f
-    JOIN students s ON f.student_id = s.id
-    WHERE 1=1
-  `;
+    // Build the query
+    let sqlQuery = `
+      SELECT f.*, s.student_id, CONCAT(s.first_name, ' ', s.last_name) as student_name, s.grade
+      FROM fees f
+      JOIN students s ON f.student_id = s.id
+      WHERE 1=1
+    `;
   
-  const queryParams = [];
+    const queryParams = [];
   
   if (search) {
     query += ` AND (s.first_name LIKE ? OR s.last_name LIKE ? OR s.student_id LIKE ?)`;

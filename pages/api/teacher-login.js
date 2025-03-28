@@ -60,8 +60,8 @@ module.exports = async function handler(req, res) {
     }
     
     // Update last login time
-    await run(
-      'UPDATE teachers SET last_login = datetime("now") WHERE id = ?',
+    await query(
+      'UPDATE teachers SET last_login = NOW() WHERE id = $1',
       [user.id]
     );
     

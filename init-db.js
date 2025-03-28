@@ -1,54 +1,41 @@
-const sqlite3 = require('sqlite3').verbose();
-const bcrypt = require('bcryptjs');
-const path = require('path');
-const fs = require('fs');
+import pg from 'pg';
+import bcrypt from 'bcryptjs';
+import 'dotenv/config';
+import logger from './config/logger.js';
 
 async function initializeDatabase() {
-  // Database path
-  const dbPath = path.resolve(process.cwd(), 'database.sqlite');
-  
-  // Create a new database connection
-  const db = new sqlite3.Database(dbPath);
+  // Create a PostgreSQL client
+  const client = new pg.Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+      rejectUnauthorized: false
+    }
+  });
   
   try {
-    // Promisify db.run and db.get
-    const run = (sql, params = []) => {
-      return new Promise((resolve, reject) => {
-        db.run(sql, params, function(err) {
-          if (err) return reject(err);
-          resolve(this);
-        });
-      });
-    };
-    
-    const get = (sql, params = []) => {
-      return new Promise((resolve, reject) => {
-        db.get(sql, params, (err, row) => {
-          if (err) return reject(err);
-          resolve(row);
-        });
-      });
-    };
+    // Connect to the database
+    await client.connect();
+    logger.info('Connected to Neon PostgreSQL database');
     
     // Create teachers table
-    await run(`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS teachers (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         username TEXT UNIQUE NOT NULL,
         password TEXT NOT NULL,
         first_name TEXT NOT NULL,
         last_name TEXT NOT NULL,
         email TEXT UNIQUE NOT NULL,
-        join_date TEXT NOT NULL,
-        last_login TEXT,
-        is_active INTEGER DEFAULT 1
+        join_date TIMESTAMP NOT NULL,
+        last_login TIMESTAMP,
+        is_active BOOLEAN DEFAULT TRUE
       )
     `);
     
     // Create students table
-    await run(`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS students (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         student_id TEXT UNIQUE NOT NULL,
         first_name TEXT NOT NULL,
         last_name TEXT NOT NULL,
@@ -67,9 +54,9 @@ async function initializeDatabase() {
     `);
     
     // Create classes table
-    await run(`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS classes (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         name TEXT NOT NULL,
         grade TEXT NOT NULL,
         teacher_id INTEGER NOT NULL,
@@ -81,68 +68,68 @@ async function initializeDatabase() {
     `);
     
     // Create assignments table
-    await run(`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS assignments (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         title TEXT NOT NULL,
         description TEXT NOT NULL,
         class_id INTEGER NOT NULL,
         due_date TEXT NOT NULL,
-        created_at TEXT NOT NULL,
+        created_at TIMESTAMP NOT NULL,
         FOREIGN KEY (class_id) REFERENCES classes(id)
       )
     `);
     
     // Create announcements table
-    await run(`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS announcements (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         title TEXT NOT NULL,
         content TEXT NOT NULL,
         created_by INTEGER NOT NULL,
-        created_at TEXT NOT NULL,
+        created_at TIMESTAMP NOT NULL,
         FOREIGN KEY (created_by) REFERENCES teachers(id)
       )
     `);
     
     // Create fees table
-    await run(`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS fees (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         student_id INTEGER NOT NULL,
         fee_type TEXT NOT NULL,
-        amount REAL NOT NULL,
+        amount DECIMAL(10,2) NOT NULL,
         due_date TEXT NOT NULL,
         payment_date TEXT,
         payment_method TEXT,
         notes TEXT,
         status TEXT NOT NULL,
-        created_at TEXT NOT NULL,
-        updated_at TEXT,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP,
         FOREIGN KEY (student_id) REFERENCES students(id)
       )
     `);
     
     // Check if admin user exists
-    const adminExists = await get('SELECT id FROM teachers WHERE username = ?', ['admin']);
+    const adminResult = await client.query('SELECT id FROM teachers WHERE username = $1', ['admin']);
     
-    if (!adminExists) {
+    if (adminResult.rows.length === 0) {
       // Create default admin user
       const hashedPassword = await bcrypt.hash('admin123', 10);
-      await run(
-        'INSERT INTO teachers (username, password, first_name, last_name, email, join_date) VALUES (?, ?, ?, ?, ?, datetime("now"))',
+      await client.query(
+        'INSERT INTO teachers (username, password, first_name, last_name, email, join_date) VALUES ($1, $2, $3, $4, $5, NOW())',
         ['admin', hashedPassword, 'Admin', 'User', 'admin@masteracademy.com']
       );
-      console.log('Default admin user created');
+      logger.info('Default admin user created');
     }
     
-    console.log('Database initialized successfully');
+    logger.info('Database initialized successfully');
   } catch (error) {
-    console.error('Database initialization error:', error);
+    logger.error('Database initialization error:', error);
   } finally {
     // Close the database connection
-    db.close();
+    await client.end();
   }
 }
 
-initializeDatabase().catch(console.error);
+initializeDatabase().catch(error => logger.error('Initialization failed:', error));

@@ -1,12 +1,18 @@
-import { Resend } from 'resend';
 import express from 'express';
 import { body, validationResult } from 'express-validator';
+import { Resend } from 'resend';
 import logger from '../config/logger.js';
 
 const router = express.Router();
 
-// Initialize Resend with API key
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Initialize Resend for email sending with a fallback for missing API key
+const resendApiKey = process.env.RESEND_API_KEY || 'dummy_key_for_development';
+const resend = new Resend(resendApiKey);
+
+// Log warning if using dummy key
+if (!process.env.RESEND_API_KEY) {
+  logger.warn('RESEND_API_KEY not found in environment variables. Email functionality will not work.');
+}
 
 // Email configuration
 const EMAIL_CONFIG = {
@@ -191,4 +197,4 @@ router.post('/send-admission', validateAdmissionForm, async (req, res) => {
     }
 });
 
-export default router; 
+export default router;

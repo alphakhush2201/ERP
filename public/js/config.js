@@ -5,7 +5,7 @@ const ENV = {
     },
     production: {
         // Use the deployed API URL
-        API_URL: 'https://masteracademy.vercel.app/api'
+        API_URL: 'https://masteracademt.vercel.app/api'
     }
 };
 

@@ -1,11 +1,8 @@
-const sqlite3 = require('sqlite3').verbose();
-const jwt = require('jsonwebtoken');
-const path = require('path');
+import jwt from 'jsonwebtoken';
+import { query } from '../../../utils/db.js';
+import 'dotenv/config';
 
-// Database path
-const dbPath = path.resolve(process.cwd(), 'database.sqlite');
-
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   // Get student ID from the URL
   const studentId = req.query.id;
   
@@ -25,32 +22,13 @@ module.exports = async function handler(req, res) {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
     
-    // Create a new database connection
-    const db = new sqlite3.Database(dbPath);
-    
-    // Promisify db functions
-    const get = (sql, params = []) => {
-      return new Promise((resolve, reject) => {
-        db.get(sql, params, (err, row) => {
-          if (err) return reject(err);
-          resolve(row);
-        });
-      });
-    };
-    
-    const run = (sql, params = []) => {
-      return new Promise((resolve, reject) => {
-        db.run(sql, params, function(err) {
-          if (err) return reject(err);
-          resolve(this);
-        });
-      });
-    };
+    // Use PostgreSQL connection
     
     try {
       // Handle GET request - fetch student details
       if (req.method === 'GET') {
-        const student = await get('SELECT * FROM students WHERE id = ?', [studentId]);
+        const studentResult = await query('SELECT * FROM students WHERE id = $1', [studentId]);
+        const student = studentResult.rows[0];
         
         if (!student) {
           return res.status(404).json({ error: 'Student not found' });
@@ -61,7 +39,8 @@ module.exports = async function handler(req, res) {
       // Handle PUT request - update student
       else if (req.method === 'PUT') {
         // Check if student exists
-        const student = await get('SELECT * FROM students WHERE id = ?', [studentId]);
+        const studentResult = await query('SELECT * FROM students WHERE id = $1', [studentId]);
+        const student = studentResult.rows[0];
         
         if (!student) {
           return res.status(404).json({ error: 'Student not found' });
@@ -82,22 +61,22 @@ module.exports = async function handler(req, res) {
         }
         
         // Update student
-        await run(
+        await query(
           `UPDATE students SET 
-            first_name = ?, 
-            last_name = ?, 
-            date_of_birth = ?, 
-            gender = ?, 
-            grade = ?, 
-            section = ?, 
-            admission_date = ?, 
-            previous_school = ?, 
-            parent_name = ?, 
-            parent_relationship = ?, 
-            parent_email = ?, 
-            parent_phone = ?, 
-            address = ?
-          WHERE id = ?`,
+            first_name = $1, 
+            last_name = $2, 
+            date_of_birth = $3, 
+            gender = $4, 
+            grade = $5, 
+            section = $6, 
+            admission_date = $7, 
+            previous_school = $8, 
+            parent_name = $9, 
+            parent_relationship = $10, 
+            parent_email = $11, 
+            parent_phone = $12, 
+            address = $13
+          WHERE id = $14`,
           [
             req.body.first_name,
             req.body.last_name,
@@ -123,9 +102,6 @@ module.exports = async function handler(req, res) {
       } else {
         res.status(405).json({ error: 'Method not allowed' });
       }
-    } finally {
-      // Close the database connection
-      db.close();
     }
   } catch (error) {
     console.error('Student API error:', error);

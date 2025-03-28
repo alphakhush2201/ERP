@@ -10,13 +10,17 @@ let teachers = [];
 let editingTeacherId = null;
 
 // API Base URL
-const API_URL = 'http://localhost:3000/api';
+const API_URL = process.env.NODE_ENV === 'development' 
+    ? 'http://localhost:3000/api'
+    : 'https://masteracademt.vercel.app/api';
 
 // Fetch all teachers
 async function fetchTeachers() {
     try {
         const response = await fetch(`${API_URL}/teachers`, {
-            credentials: 'include'
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
         });
         const data = await response.json();
         if (data.success) {
@@ -111,9 +115,9 @@ async function handleSubmit(event) {
         const response = await fetch(url, {
             method,
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
             },
-            credentials: 'include',
             body: JSON.stringify(teacherData)
         });
 
@@ -139,7 +143,9 @@ async function deleteTeacher(teacherId) {
     try {
         const response = await fetch(`${API_URL}/teachers/${teacherId}`, {
             method: 'DELETE',
-            credentials: 'include'
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
         });
 
         const data = await response.json();
@@ -174,4 +180,4 @@ window.addEventListener('click', (event) => {
 });
 
 // Initial load
-fetchTeachers(); 
+fetchTeachers();

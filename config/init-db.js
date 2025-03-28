@@ -23,4 +23,5 @@ async function initializeDatabase() {
     }
 }
 
-initializeDatabase();
+// Export the function as default
+export default initializeDatabase;
