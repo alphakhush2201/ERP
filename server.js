@@ -48,11 +48,12 @@ app.use(helmet({
 
 // CORS configuration
 const corsOptions = {
-    origin: process.env.CORS_ORIGIN || '*',
+    origin: process.env.CORS_ORIGIN || 'https://masteracademt.vercel.app',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
-    maxAge: 600
+    maxAge: 600,
+    optionsSuccessStatus: 204
 };
 app.use(cors(corsOptions));
 
