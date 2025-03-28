@@ -1,15 +1,51 @@
 import Student from '../models/Student.js';
 import logger from '../config/logger.js';
 
-// Get all students
+// Get all students with pagination, search and filtering
 export const getAllStudents = async (req, res) => {
     try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const offset = (page - 1) * limit;
+        const search = req.query.search || '';
+        const grade = req.query.grade || '';
+        
+        // Build where clause for filtering
+        const whereClause = {};
+        
+        // Add search functionality
+        if (search) {
+            whereClause[Symbol.for('or')] = [
+                { firstName: { [Symbol.for('like')]: `%${search}%` } },
+                { lastName: { [Symbol.for('like')]: `%${search}%` } },
+                { parentName: { [Symbol.for('like')]: `%${search}%` } },
+                { parentPhone: { [Symbol.for('like')]: `%${search}%` } },
+                { parentEmail: { [Symbol.for('like')]: `%${search}%` } }
+            ];
+        }
+        
+        // Add grade filter
+        if (grade) {
+            whereClause.grade = grade;
+        }
+        
+        // Get total count for pagination
+        const count = await Student.count({ where: whereClause });
+        
+        // Get students with pagination
         const students = await Student.findAll({
-            order: [['createdAt', 'DESC']]
+            where: whereClause,
+            order: [['createdAt', 'DESC']],
+            limit,
+            offset
         });
+        
         res.status(200).json({
             success: true,
-            data: students
+            data: students,
+            total: count,
+            page,
+            totalPages: Math.ceil(count / limit)
         });
     } catch (error) {
         logger.error('Error fetching students:', error);
@@ -115,4 +151,4 @@ export const deleteStudent = async (req, res) => {
             error: 'Server Error'
         });
     }
-}; 
+};

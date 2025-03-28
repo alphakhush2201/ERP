@@ -2,8 +2,10 @@ import express from 'express';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { PrismaClient } from '@prisma/client';
+import cors from 'cors';
 
 const router = express.Router();
+router.use(cors());
 const prisma = new PrismaClient();
 
 // Login endpoint
